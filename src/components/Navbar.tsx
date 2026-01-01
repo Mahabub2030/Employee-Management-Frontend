@@ -21,6 +21,7 @@ const navigationLinks = [
   { href: "/", label: "Home", role: "PUBLIC" },
   { href: "/about", label: "About", role: "PUBLIC" },
   { href: "/feature", label: "Features", role: "PUBLIC" },
+  { href: "/register", label: "Register", role: "PUBLIC" },
 ];
 
 export default function Navbar() {
