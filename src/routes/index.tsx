@@ -6,12 +6,12 @@ import { createBrowserRouter } from "react-router";
 
 export const router = createBrowserRouter([
   {
-    Component: App,
     path: "/",
+    Component: App,
     children: [
       {
-        Component: AboutPage,
         path: "about",
+        Component: AboutPage,
       },
     ],
   },
