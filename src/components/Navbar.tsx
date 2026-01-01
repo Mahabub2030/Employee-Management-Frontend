@@ -7,6 +7,7 @@ import {
 } from "@/components/ui/popover";
 import { LayoutDashboard } from "lucide-react";
 import { Link } from "react-router";
+import { ModeToggle } from "./layout/ModeToggler";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import {
   DropdownMenu,
@@ -128,8 +129,8 @@ export default function Navbar() {
                 ))}
               </NavigationMenu>
             </div>
-
             {/* RIGHT */}
+            <ModeToggle />
             <div className="flex items-center gap-4">
               {!isLoggedIn ? (
                 <Link
