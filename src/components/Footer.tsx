@@ -224,25 +224,11 @@ const Footer = () => {
         <div className="pt-8 border-t border-border flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-sm text-muted-foreground">
             © {currentYear}{" "}
-            <span className="font-bold text-foreground">Digital Wallet</span>.
-            All rights reserved.
+            <span className="font-bold text-foreground">EMS WBP APP</span>. All
+            rights reserved.
           </p>
           <div className="flex items-center gap-6">
-            <img
-              src="https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal.svg"
-              alt="PayPal"
-              className="h-4 grayscale opacity-50 hover:opacity-100 transition-opacity"
-            />
-            <img
-              src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg"
-              alt="Mastercard"
-              className="h-4 grayscale opacity-50 hover:opacity-100 transition-opacity"
-            />
-            <img
-              src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg"
-              alt="Visa"
-              className="h-4 grayscale opacity-50 hover:opacity-100 transition-opacity"
-            />
+            EMS | Developed by{" Mahabub ALam "}
           </div>
         </div>
       </div>
