@@ -1,49 +1,85 @@
-# Employee Management Frontend
+# Employee Management System (EMS)
 
-[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-1.0.0-green)]()
-
-A **modern frontend application** for managing employee data, built with **React**, **Redux Toolkit**, and **RTK Query**. This project provides a user-friendly interface to view, add, update, and manage employee information efficiently.
+A **full-stack Employee Management System (EMS)** built with **React.js**, **Redux Toolkit**, **Tailwind CSS**, and **shadcn/ui**, designed to efficiently manage employee data with **role-based access control**.
 
 ---
 
-## Table of Contents
+## 🚀 Features
 
-- [Features](#features)
-- [Technologies Used](#technologies-used)
-- [Installation](#installation)
-- [Usage](#usage)
-- [Folder Structure](#folder-structure)
-- [Screenshots](#screenshots)
-- [Contributing](#contributing)
-- [License](#license)
-
----
-
-## Features
-
-- Add, edit, and delete employees
-- Display employee list with search and filtering
-- Manage employee data efficiently using Redux Toolkit & RTK Query
-- Responsive design for desktop and mobile
-- Integration with backend API for CRUD operations
+- 🔐 Role-Based Access Control (Admin, Manager, Employee)
+- 👥 Employee CRUD Operations (Create, Read, Update, Delete)
+- 🏢 Department & Role Management
+- 📊 Centralized State Management using Redux Toolkit
+- 🎨 Modern, responsive UI with Tailwind CSS & shadcn/ui
+- ⚡ Fast and scalable architecture
+- 🔍 Search and filter employees
+- 📱 Fully responsive design
 
 ---
 
-## Technologies Used
+## 👤 User Roles & Permissions
 
-- **React** – Frontend library for building UI
-- **Redux Toolkit & RTK Query** – State management and API handling
-- **Tailwind CSS** – Styling and responsive layout
-- **Axios / Fetch API** – HTTP requests
-- **JavaScript (ES6+)** – Core language features
+### Admin
+
+- Full system access
+- Manage employees, roles, and departments
+- Assign roles and permissions
+
+### Manager
+
+- View and manage assigned team members
+- Update employee information
+- Monitor employee status
+
+### Employee
+
+- View personal profile
+- Update limited personal information
 
 ---
 
-## Installation
+## 🛠️ Tech Stack
 
-1. Clone the repository:
+### Frontend
 
-```bash
-git clone https://github.com/Mahabub2030/employee-management-frontend.git
+- **React.js**
+- **Redux Toolkit**
+- **Tailwind CSS**
+- **shadcn/ui**
+
+### Backend
+
+- REST API / Server-side logic (can be integrated)
+- Authentication & Authorization (JWT / Session-based)
+
+### Tools
+
+- Git & GitHub
+- VS Code
+
+---
+
+## 📂 Project Structure
+
+base ```
+src/
+├── components/
+│ ├── ui/
+│ ├── layout/
+│ └── common/
+├── features/
+│ ├── auth/
+│ ├── employees/
+│ └── roles/
+├── pages/
+├── redux/
+│ ├── store.js
+│ └── slices/
+├── services/
+├── utils/
+├── App.jsx
+└── main.jsx
+
+```
+
 ```

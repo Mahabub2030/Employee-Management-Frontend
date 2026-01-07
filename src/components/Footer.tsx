@@ -221,13 +221,15 @@ const Footer = () => {
         </div>
 
         {/* Bottom Bar */}
-        <div className="pt-8 border-t border-border flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-sm text-muted-foreground">
+        <div className="pt-8 border-t border-border flex-col md:flex-row justify-between items-center gap-4 flex bg-primary px-4 py-2 rounded-md text-sm text-white">
+          <p className="text-sm text-muted-foreground ">
             © {currentYear}{" "}
-            <span className="font-bold text-foreground">EMS WBP APP</span>. All
-            rights reserved.
+            <span className="font-bold  pt-8 border-t border-border gap-4  bg-primary px-4 py-2 rounded-md text-sm text-white">
+              EMS WBP APP
+            </span>
+            . All rights reserved.
           </p>
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-6 bg-primary text-primary-foreground px-4 py-2 rounded-md text-sm">
             EMS | Developed by{" Mahabub ALam "}
           </div>
         </div>
