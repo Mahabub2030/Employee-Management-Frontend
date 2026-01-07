@@ -61,7 +61,7 @@ A **full-stack Employee Management System (EMS)** built with **React.js**, **Red
 
 ## 📂 Project Structure
 
-base ```
+```base
 src/
 ├── components/
 │ ├── ui/
@@ -79,7 +79,5 @@ src/
 ├── utils/
 ├── App.jsx
 └── main.jsx
-
-```
 
 ```
