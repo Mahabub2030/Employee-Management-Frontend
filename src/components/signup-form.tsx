@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ChevronLeft, Mail, ShieldCheck, User } from "lucide-react";
 import { useForm } from "react-hook-form";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { Button } from "./ui/button";
 import {
   Form,
@@ -16,9 +16,11 @@ import {
 } from "./ui/form";
 import { Input } from "./ui/input";
 // import { Password } from "@/components/ui/password";
+import { useRegisterMutation } from "@/redux/features/auth/auth.api";
+import { toast } from "sonner";
 import * as z from "zod";
 import registerImg from "../assets/singUp.jpg";
-const signupSchema = z
+const registerSchema = z
   .object({
     name: z.string().min(2, "Name is Required"),
     email: z.email("Invalid email address"),
@@ -34,8 +36,10 @@ export function SignupForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
+  const [register] = useRegisterMutation();
+  const navigate = useNavigate();
   const form = useForm({
-    resolver: zodResolver(signupSchema),
+    resolver: zodResolver(registerSchema),
     defaultValues: {
       name: "",
       email: "",
@@ -44,8 +48,28 @@ export function SignupForm({
     },
   });
 
-  const handleSubmit = async (data: z.infer<typeof signupSchema>) => {
-    console.log(data);
+  const handleSubmit = async (data: z.infer<typeof registerSchema>) => {
+    const toastId: string | number | undefined = toast.loading(
+      "Creating your User..."
+    );
+    try {
+      const userInfo = {
+        name: data.name,
+        email: data.email,
+        password: data.password,
+      };
+      const res = await register(userInfo).unwrap();
+      if (res.success) {
+        toast.success("Registration Successful! Please login.", {
+          id: toastId,
+        });
+        navigate("/login");
+      }
+    } catch (error: any) {
+      toast.error(error?.data?.message || "Registration failed", {
+        id: toastId,
+      });
+    }
   };
 
   return (
