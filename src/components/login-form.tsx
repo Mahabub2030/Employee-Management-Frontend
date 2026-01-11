@@ -49,15 +49,17 @@ export function LoginForm({
       toast.loading(" logging in...");
     try {
       const res = await login(data).unwrap();
+
       if (res.success) {
-        toast.success("Welcome to Digital-Wallet!", { id: toastId });
+        toast.success("Welcome to EMS!", { id: toastId });
         navigate("/");
       }
     } catch (error: any) {
       toast.error(error?.data?.message || "Login failed", { id: toastId });
 
-      if (error?.data?.message === "Your account is not Verified") {
-        navigate("/verify", { state: data.email });
+      if (error.status === 401) {
+        toast.error("Your account is not Verified");
+        navigate("/verify");
       }
     }
   };

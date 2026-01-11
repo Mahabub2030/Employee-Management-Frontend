@@ -63,7 +63,7 @@ export function SignupForm({
         toast.success("Registration Successful! Please login.", {
           id: toastId,
         });
-        navigate("/login");
+        navigate("/verify");
       }
     } catch (error: any) {
       toast.error(error?.data?.message || "Registration failed", {
