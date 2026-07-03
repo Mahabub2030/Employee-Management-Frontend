@@ -33,7 +33,7 @@ export const employeeApi = baseApi.injectEndpoints({
         method: "PATCH",
         data,
       }),
-      invalidatesTags: ["EMPLOYEES"],
+      invalidatesTags: (_result, _error, { id }) => [{ type: "EMPLOYEES", id }],
     }),
     deleteEmployee: builder.mutation({
       query: (id) => ({

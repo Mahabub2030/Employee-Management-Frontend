@@ -6,12 +6,12 @@ import config from "@/config";
 import { cn } from "@/lib/utils";
 import { useLoginMutation } from "@/redux/features/auth/auth.api";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ChevronLeft, KeyRound, Mail } from "lucide-react";
+import { ChevronLeft, Mail } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router";
 import { toast } from "sonner";
 import z from "zod";
-import loginImg from "../assets/Ems-Logo.png";
+
 import {
   Form,
   FormControl,
@@ -220,7 +220,7 @@ export function LoginForm({
           </Form>
           <div className="bg-muted relative hidden md:block">
             <img
-              src={loginImg}
+              // src={loginImg}
               alt="Image"
               className="absolute inset-0 h-1/2 w-auto object-cover dark:brightness-[0.2] dark:grayscale"
             />

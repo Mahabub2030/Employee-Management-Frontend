@@ -10,11 +10,11 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { useForgotPasswordMutation } from "@/redux/features/auth/auth.api";
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { toast } from "sonner";
+
 import z from "zod";
 
 const emailSchema = z.object({
@@ -24,12 +24,11 @@ const emailSchema = z.object({
 type FormData = z.infer<typeof emailSchema>;
 
 const ForgotPasswordDialog = () => {
-  const [forgotPassword] = useForgotPasswordMutation();
   const [open, setOpen] = useState(false);
   const {
     register,
     handleSubmit,
-    reset,
+
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(emailSchema),
@@ -40,30 +39,6 @@ const ForgotPasswordDialog = () => {
 
   const onSubmit = async (data: FormData) => {
     console.log(data);
-    let toastId: string | number | undefined;
-    try {
-      const forgotPasswordData = {
-        email: data.email,
-      };
-      toastId = toast.loading("Sending password reset email...");
-      const res = await forgotPassword(forgotPasswordData).unwrap();
-      if (res.success) {
-        toast.success("Password reset link has been sent to your email!", {
-          id: toastId,
-        });
-        reset();
-      } else {
-        toast.error("Unable to send reset link. Please try again.", {
-          id: toastId,
-        });
-      }
-    } catch (error: any) {
-      const message =
-        error?.data?.message || "Something went wrong. Please try again.";
-      toast.error(message, { id: toastId });
-    } finally {
-      setOpen(false);
-    }
   };
   return (
     <Dialog open={open} onOpenChange={setOpen}>

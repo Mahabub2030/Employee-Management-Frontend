@@ -1,5 +1,5 @@
 import { Link } from "react-router";
-import pageNotFoundImage from "../assets/404.png";
+
 export default function NotFound() {
   return (
     <div className="min-h-screen bg-[#4F2176] flex items-center justify-center px-4">
@@ -27,7 +27,7 @@ export default function NotFound() {
         {/* Image Section */}
         <div className="flex justify-center">
           <img
-            src={pageNotFoundImage}
+            // src={pageNotFoundImage}
             alt="404 illustration"
             className="w-[220px] sm:w-[280px] md:w-[340px]"
           />

@@ -19,7 +19,7 @@ import {
 import { useRegisterMutation } from "@/redux/features/auth/auth.api";
 import { toast } from "sonner";
 import * as z from "zod";
-import registerImg from "../assets/singUp.jpg";
+
 import Password from "./ui/Password";
 import { Input } from "./ui/input";
 
@@ -82,7 +82,7 @@ export function SignupForm({
           <div className="relative hidden md:block bg-primary/5">
             <div className="absolute inset-0 z-10 bg-gradient-to-br from-primary/40 to-background/20" />
             <img
-              src={registerImg}
+              // src={registerImg}
               alt="Register Illustration"
               className="absolute inset-0 h-auto w-auto object-cover dark:opacity-40 shadow"
             />
