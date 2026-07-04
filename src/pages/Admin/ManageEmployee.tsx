@@ -121,11 +121,12 @@ export default function ManageEmployee() {
 
       {/* Main Table Interface (Houses search, export buttons, layout styles internally) */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-        <ReusableTable
+        <ReusableTable<Employee>
           data={employees as Employee[]}
           columns={columns}
           rowKey="employeeId"
           emptyMessage="No employees found in system records."
+          page={0}
         />
       </div>
     </div>

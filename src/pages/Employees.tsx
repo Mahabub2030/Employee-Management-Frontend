@@ -310,12 +310,12 @@ export default function Employees() {
   }
 
   return (
-    <div className="space-y-4">
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="space-y-6"
-      >
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="space-y-6"
+    >
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 container mx-auto">
         <ReusableTable<Employee>
           data={employeesData}
           columns={columns}
@@ -470,7 +470,7 @@ export default function Employees() {
             </div>
           </DialogContent>
         </Dialog>
-      </motion.div>
-    </div>
+      </div>
+    </motion.div>
   );
 }
