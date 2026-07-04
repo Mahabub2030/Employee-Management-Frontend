@@ -29,7 +29,7 @@ export const employeeApi = baseApi.injectEndpoints({
     }),
     updateEmployee: builder.mutation({
       query: ({ id, ...data }) => ({
-        url: `/employees/update/${id}`,
+        url: `/employees/${id}`,
         method: "PATCH",
         data,
       }),
@@ -37,7 +37,7 @@ export const employeeApi = baseApi.injectEndpoints({
     }),
     deleteEmployee: builder.mutation({
       query: (id) => ({
-        url: `/employees/delete/${id}`,
+        url: `/employees/${id}`,
         method: "DELETE",
       }),
       invalidatesTags: ["EMPLOYEES"],
