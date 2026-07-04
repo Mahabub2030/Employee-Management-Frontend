@@ -16,6 +16,9 @@ export interface Column<T> {
   render?: (row: T, index: number) => React.ReactNode;
   className?: string;
   isHighlighted?: boolean;
+  key?: string;
+  label?: string;
+  hideOn?: "md" | "lg";
 }
 
 interface ReusableTableProps<T> {
@@ -23,17 +26,35 @@ interface ReusableTableProps<T> {
   columns: Column<T>[];
   rowKey: keyof T | ((row: T) => string | number);
   emptyMessage?: string;
-  searchKeys?: (keyof T)[]; // Which keys to search through
+  searchKeys?: (keyof T)[];
+  search?: string;
+  onSearchChange?: (value: string) => void;
+  searchPlaceholder?: string;
+  filterValue?: string;
+  onFilterChange?: (value: string) => void;
+  filterOptions?: { label: string; value: string }[];
+  filterPlaceholder?: string;
+  pageSize?: number;
+  page: number;
+  onPageChange?: (page: number) => void;
+  total?: number;
+  onPageSizeChange?: (size: number) => void;
+  // ✨ Added onRowClick optional prop support
+  onRowClick?: (row: T) => void;
+  // ✨ Added optional actions block slot (for the export buttons)
+  actions?: React.ReactNode;
 }
 
 export function ReusableTable<T>({
-  data = [],
+  data,
   columns,
   rowKey,
   emptyMessage = "No data available in table",
   searchKeys = [],
+  onRowClick,
+  actions,
 }: ReusableTableProps<T>) {
-  const [pageSize, setPageSize] = useState(25);
+  const [pageSize, setPageSize] = useState(10); // Sync default footprint layout sizing
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -42,12 +63,20 @@ export function ReusableTable<T>({
     return row[rowKey] as unknown as string | number;
   };
 
-  // 1. Filter data based on search bar query input
-  const filteredData = useMemo(() => {
+  // 1. Safe Array Normalization
+  const normalizedData = useMemo(() => {
     if (!data) return [];
-    if (!searchQuery.trim() || searchKeys.length === 0) return data;
+    if (Array.isArray(data)) return data;
 
-    return data.filter((item) =>
+    const possibleArray = Object.values(data).find(Array.isArray);
+    return (possibleArray || []) as T[];
+  }, [data]);
+
+  // 2. Filter data based on search bar query input
+  const filteredData = useMemo(() => {
+    if (!searchQuery.trim() || searchKeys.length === 0) return normalizedData;
+
+    return normalizedData.filter((item) =>
       searchKeys.some((key) => {
         const val = item[key];
         return val
@@ -55,9 +84,9 @@ export function ReusableTable<T>({
           : false;
       }),
     );
-  }, [data, searchQuery, searchKeys]);
+  }, [normalizedData, searchQuery, searchKeys]);
 
-  // 2. Compute pagination metrics
+  // 3. Compute pagination metrics
   const totalEntries = filteredData.length;
   const totalPages = Math.max(1, Math.ceil(totalEntries / pageSize));
 
@@ -67,6 +96,8 @@ export function ReusableTable<T>({
   }, [searchQuery, pageSize]);
 
   const startIndex = (currentPage - 1) * pageSize;
+
+  // 4. Slice the filtered list down to current page footprint
   const paginatedData = useMemo(() => {
     return filteredData.slice(startIndex, startIndex + pageSize);
   }, [filteredData, startIndex, pageSize]);
@@ -90,12 +121,9 @@ export function ReusableTable<T>({
         </div>
 
         <div className="flex flex-wrap items-center gap-4 w-full sm:w-auto justify-end">
-          <div className="flex items-center gap-3 text-sm text-gray-600 font-medium">
-            <button className="hover:text-black transition">🖨️ Print</button>
-            <button className="hover:text-black transition">📊 Excel</button>
-            <button className="hover:text-black transition">📄 CSV</button>
-            <button className="hover:text-black transition">📋 Copy</button>
-          </div>
+          {/* Injecting Parent Actions Block Toolbar Slot if supplied */}
+          {actions && <div className="flex items-center gap-2">{actions}</div>}
+
           <div className="flex items-center gap-2 font-bold text-gray-800">
             <span>Search:</span>
             <Input
@@ -118,10 +146,20 @@ export function ReusableTable<T>({
                 const headerStyle = col.isHighlighted
                   ? "bg-purple-50 text-purple-900 font-bold px-4 py-3 text-center border-x border-white"
                   : "text-purple-800 font-bold px-4 py-3";
+
+                const responsivenessClass =
+                  col.hideOn === "md"
+                    ? "hidden md:table-cell"
+                    : col.hideOn === "lg"
+                    ? "hidden lg:table-cell"
+                    : "";
+
                 return (
                   <TableHead
-                    key={idx}
-                    className={`${headerStyle} ${col.className || ""}`}
+                    key={col.key || idx}
+                    className={`${headerStyle} ${responsivenessClass} ${
+                      col.className || ""
+                    }`}
                   >
                     {col.header}
                   </TableHead>
@@ -134,26 +172,36 @@ export function ReusableTable<T>({
               paginatedData.map((row, rowIndex) => (
                 <TableRow
                   key={getRowKey(row)}
-                  className={
+                  onClick={() => onRowClick?.(row)} // ✨ Bind click row redirect event
+                  className={`${
                     rowIndex % 2 === 0
                       ? "bg-white hover:bg-gray-50"
                       : "bg-gray-50/60 hover:bg-gray-50"
-                  }
+                  } ${onRowClick ? "cursor-pointer" : ""}`}
                 >
-                  {columns.map((col, colIdx) => (
-                    <TableCell
-                      key={colIdx}
-                      className={`px-4 py-3 border-b border-gray-100 ${
-                        col.isHighlighted ? "bg-purple-50/30 text-center" : ""
-                      } ${col.className || ""}`}
-                    >
-                      {col.render
-                        ? col.render(row, startIndex + rowIndex)
-                        : col.accessor
-                        ? (row[col.accessor] as React.ReactNode)
-                        : null}
-                    </TableCell>
-                  ))}
+                  {columns.map((col, colIdx) => {
+                    const responsivenessClass =
+                      col.hideOn === "md"
+                        ? "hidden md:table-cell"
+                        : col.hideOn === "lg"
+                        ? "hidden lg:table-cell"
+                        : "";
+
+                    return (
+                      <TableCell
+                        key={col.key || colIdx}
+                        className={`px-4 py-3 border-b border-gray-100 ${responsivenessClass} ${
+                          col.isHighlighted ? "bg-purple-50/30 text-center" : ""
+                        } ${col.className || ""}`}
+                      >
+                        {col.render
+                          ? col.render(row, startIndex + rowIndex)
+                          : col.accessor
+                          ? (row[col.accessor] as React.ReactNode)
+                          : null}
+                      </TableCell>
+                    );
+                  })}
                 </TableRow>
               ))
             ) : (
@@ -170,7 +218,7 @@ export function ReusableTable<T>({
         </Table>
       </div>
 
-      {/* Bottom Counter Bar and Numbered Pagination controls */}
+      {/* Bottom Counter Bar and Pagination */}
       <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-gray-500 font-medium">
         <div>
           Showing {totalEntries > 0 ? startIndex + 1 : 0} to{" "}
@@ -178,7 +226,6 @@ export function ReusableTable<T>({
           entries
         </div>
 
-        {/* Numbered Pagination Control Panel */}
         <div className="flex items-center gap-1">
           <Button
             variant="outline"
@@ -196,7 +243,10 @@ export function ReusableTable<T>({
                 key={pageNumber}
                 variant={currentPage === pageNumber ? "default" : "outline"}
                 size="sm"
-                onClick={() => setCurrentPage(pageNumber)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setCurrentPage(pageNumber);
+                }}
                 className={`h-7 w-7 p-0 ${
                   currentPage === pageNumber
                     ? "bg-purple-700 hover:bg-purple-800 text-white"

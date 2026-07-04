@@ -8,6 +8,16 @@ export enum EMPLOYEE_STATUS {
 }
 
 export interface Employee {
+  avatar?: string;
+  created_by?: string;
+  created_at?: Date | string;
+  updated_at?: Date | string;
+  phone: string;
+  department: string;
+  position: string;
+  salary: number | string;
+  shift: string;
+  id: string | number;
   name: string;
   jobTitle: string;
   idNumber: string;

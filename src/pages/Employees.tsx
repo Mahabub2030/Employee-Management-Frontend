@@ -1,372 +1,476 @@
-import React, { useState, useMemo } from "react";
-import { Button } from "@/components/ui/button";
-import { useGetEmployeesQuery } from "@/redux/features/employee/employee.api";
-import html2pdf from "html2pdf.js";
-import { Link } from "react-router";
+import { useAuth } from "@/constants/AuthContext";
+import { useState } from "react";
+import { useNavigate } from "react-router";
+import {
+  useGetEmployeesQuery,
+  useUpdateEmployeeMutation,
+  useDeleteEmployeeMutation,
+  useAddEmployeesMutation,
+} from "@/redux/features/employee/employee.api";
+import { toast } from "sonner";
 import * as XLSX from "xlsx";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import { Download, FileText, Pencil, Plus, Trash2 } from "lucide-react";
+import { Column, ReusableTable } from "@/components/ui/reusable-table";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { motion } from "framer-motion";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+// --- Updated Interface to Match JSON Data Exactly ---
+export interface Employee {
+  _id: string; // Changed from id
+  name: string;
+  email?: string;
+  phone?: string;
+  phoneNumber?: string; // Matches JSON
+  gender?: "male" | "female";
+  nationality: string;
+  avatar?: string;
+  companyName: string;
+  department?: string;
+  position?: string;
+  jobTitle: string; // Matches JSON
+  shift?: string;
+  workLocation?: string;
+  group: string; // Matches JSON
+  employeeId: string | number; // Matches JSON
+  idNumber: string; // Matches JSON
+  dacoId?: string;
+  SAPNumber?: string;
+  salary?: number | string;
+  status: "ACTIVE" | "ON_LEAVE" | "TERMINATED" | string; // Matches JSON uppercase formatting
+  joiningDate: Date | string; // Matches JSON
+  remark?: string;
+  images?: string[];
+  updatedAt?: string; // Matches JSON
+  createdAt?: string;
+}
+
+const shiftOptions = ["Morning", "Afternoon", "Night"];
+const departments = [
+  "Administrative / Management",
+  "Engineering",
+  "HR",
+  "Marketing",
+  "Sales",
+];
+
+// Updated to map uppercase database keys safely to the style states
+const statusBadge: Record<string, string> = {
+  ACTIVE: "bg-success/15 text-success",
+  "ON LEAVE": "bg-warning/15 text-warning",
+  TERMINATED: "bg-destructive/15 text-destructive",
+};
 
 export default function Employees() {
-  // 1. Fetching data from your Redux API hook
-  const { data, isLoading, isError } = useGetEmployeesQuery({
-    page: 1,
-    limit: 50,
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const canEdit = user?.role === "admin" || user?.role === "superadmin";
+
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
+
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    phoneNumber: "",
+    group: "Administrative / Management",
+    jobTitle: "Administrator",
+    companyName: "Safari Group",
+    employeeId: "",
+    idNumber: "",
+    nationality: "Saudi",
   });
 
-  const [searchTerm, setSearchTerm] = useState("");
-  const [entriesLimit, setEntriesLimit] = useState(10);
-  const [currentPage, setCurrentPage] = useState(1);
+  // RTK Query Hooks
+  const { data: employeesData = [], isLoading } =
+    useGetEmployeesQuery(undefined);
+  const [addEmployee] = useAddEmployeesMutation();
+  const [updateEmployee] = useUpdateEmployeeMutation();
+  const [deleteEmployee] = useDeleteEmployeeMutation();
 
-  // 2. Client-side Search Filter with safe array fallback
-  const filteredData = useMemo(() => {
-    const employeeList = data || [];
-    return employeeList.filter((emp: any) => {
-      const name = emp?.name || "";
-      const empId = emp?.employeeId || "";
-      const idNum = emp?.idNumber || "";
-      const nation = emp?.nationality || "";
-      const groupName = emp?.group || "";
-      const company = emp?.companyName || "";
-      const statusStr = emp?.status || "";
-
-      const criteria =
-        `${name} ${empId} ${idNum} ${nation} ${groupName} ${company} ${statusStr}`.toLowerCase();
-      return criteria.includes(searchTerm.toLowerCase());
+  const openAdd = () => {
+    setEditingEmployee(null);
+    setForm({
+      name: "",
+      email: "",
+      phoneNumber: "",
+      group: "Administrative / Management",
+      jobTitle: "Administrator",
+      companyName: "Safari Group",
+      employeeId: "",
+      idNumber: "",
+      nationality: "Saudi",
     });
-  }, [data, searchTerm]);
+    setDialogOpen(true);
+  };
 
-  // 3. Dynamic Metrics Aggregation based on filtered list
-  const metrics = useMemo(() => {
-    let active = 0;
-    let inactive = 0;
-    let vacation = 0;
+  const openEdit = (emp: Employee) => {
+    setEditingEmployee(emp);
+    setForm({
+      name: emp.name,
+      email: emp.email || "",
+      phoneNumber: emp.phoneNumber || "",
+      group: emp.group || "Administrative / Management",
+      jobTitle: emp.jobTitle || "",
+      companyName: emp.companyName || "",
+      employeeId: String(emp.employeeId || ""),
+      idNumber: emp.idNumber || "",
+      nationality: emp.nationality || "Saudi",
+    });
+    setDialogOpen(true);
+  };
 
-    filteredData.forEach((emp: any) => {
-      const status = (emp?.status || "").toUpperCase();
-      if (status === "ACTIVE") {
-        active++;
-      } else if (status === "INACTIVE") {
-        inactive++;
-      } else if (status.includes("VACATION")) {
-        vacation++;
+  const handleSave = async () => {
+    if (!form.name.trim()) {
+      toast.error("Employee name is required");
+      return;
+    }
+
+    try {
+      if (editingEmployee) {
+        await updateEmployee({
+          id: editingEmployee._id,
+          ...form,
+        }).unwrap();
+        toast.success("Employee updated successfully");
+      } else {
+        await addEmployee({
+          ...form,
+          status: "ACTIVE",
+        }).unwrap();
+        toast.success("Employee added successfully");
       }
-    });
-
-    return { active, inactive, vacation };
-  }, [filteredData]);
-
-  // 4. Dynamic Pagination Calculations
-  const totalPages = Math.ceil(filteredData.length / entriesLimit) || 1;
-
-  const paginatedData = useMemo(() => {
-    const startIndex = (currentPage - 1) * entriesLimit;
-    return filteredData.slice(startIndex, startIndex + entriesLimit);
-  }, [filteredData, currentPage, entriesLimit]);
-
-  const startEntryIndex =
-    filteredData.length === 0 ? 0 : (currentPage - 1) * entriesLimit + 1;
-  const endEntryIndex = Math.min(
-    currentPage * entriesLimit,
-    filteredData.length,
-  );
-
-  // 5. Action Event Handlers
-  const handleLimitChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setEntriesLimit(Number(e.target.value));
-    setCurrentPage(1);
-  };
-
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
-    setCurrentPage(1);
-  };
-
-  // 6. File Export Actions (Excel)
-  const exportToExcel = () => {
-    const ws = XLSX.utils.json_to_sheet(
-      filteredData.map((emp: any, idx: number) => ({
-        "Sr.No": idx + 1,
-        Name: emp.name,
-        "Job Title": emp.jobTitle,
-        "Employee ID": emp.employeeId,
-        "ID Number": emp.idNumber,
-        Group: emp.group,
-        Nationality: emp.nationality,
-        Company: emp.companyName,
-        "Joining Date": emp.joiningDate
-          ? new Date(emp.joiningDate).toLocaleDateString()
-          : "N/A",
-        Status: emp.status,
-        Remark: emp.remark || "",
-      })),
-    );
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Employees");
-    XLSX.writeFile(wb, "employees_list.xlsx");
-  };
-
-  // 7. File Export Actions (PDF)
-  const exportToPDF = () => {
-    const element = document.getElementById("employee-table");
-    if (element) {
-      html2pdf()
-        .from(element)
-        .set({
-          margin: [10, 10, 10, 10],
-          filename: "employees_report.pdf",
-          html2canvas: { scale: 2, useCORS: true },
-          jsPDF: { orientation: "landscape", unit: "mm", format: "a4" },
-        })
-        .save();
+      setDialogOpen(false);
+    } catch (error: any) {
+      toast.error("Operation failed: " + (error?.message || "Unknown error"));
     }
   };
 
-  // 8. Core Async Loading and Error UI Safeguards
-  if (isLoading)
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteEmployee(id).unwrap();
+      toast.success("Employee profile deleted");
+    } catch (error) {
+      toast.error("Failed to execute deletion tracking hook");
+    }
+  };
+
+  const exportExcel = () => {
+    const ws = XLSX.utils.json_to_sheet(employeesData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Employees");
+    XLSX.writeFile(wb, "employees_report.xlsx");
+    toast.success("Excel sheet downloaded");
+  };
+
+  const exportPDF = () => {
+    const doc = new jsPDF();
+    doc.setFontSize(16);
+    doc.text("Company Employee Register", 14, 20);
+    autoTable(doc, {
+      startY: 30,
+      head: [["Emp ID", "Name", "Job Title", "Group", "Company", "Status"]],
+      body: employeesData.map((e: Employee) => [
+        e.employeeId,
+        e.name,
+        e.jobTitle,
+        e.group,
+        e.companyName,
+        e.status,
+      ]),
+    });
+    doc.save("employees.pdf");
+    toast.success("PDF generated successfully");
+  };
+
+  // --- Dynamic Headings Structured with new Keys ---
+  const columns: Column<Employee>[] = [
+    {
+      key: "employeeId",
+      header: "ID",
+      accessor: "employeeId",
+      className: "font-mono text-xs text-muted-foreground",
+    },
+    {
+      key: "name",
+      header: "Employee Details",
+      render: (emp) => (
+        <div className="flex items-center gap-3">
+          <div className="h-9 w-9 rounded-full bg-purple-100 flex items-center justify-center shrink-0">
+            <span className="text-xs font-bold text-purple-700">
+              {emp.avatar || emp.name.slice(0, 2).toUpperCase()}
+            </span>
+          </div>
+          <div>
+            <p className="font-semibold text-sm text-gray-900">{emp.name}</p>
+            <p className="text-xs text-muted-foreground">
+              {emp.email || "No Email Email Listed"}
+            </p>
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: "jobTitle",
+      header: "Job Title",
+      accessor: "jobTitle",
+    },
+    {
+      key: "group",
+      header: "Group Category",
+      accessor: "group",
+      hideOn: "md",
+    },
+    {
+      key: "companyName",
+      header: "Company",
+      accessor: "companyName",
+      hideOn: "lg",
+    },
+    {
+      key: "status",
+      header: "Status",
+      render: (emp) => (
+        <span
+          className={`text-xs px-2.5 py-1 rounded-full font-bold uppercase tracking-wider ${
+            statusBadge[emp.status] || "bg-gray-100 text-gray-600"
+          }`}
+        >
+          {emp.status}
+        </span>
+      ),
+    },
+    {
+      key: "joiningDate",
+      header: "Joining Date",
+      hideOn: "lg",
+      render: (emp) => (
+        <span className="text-muted-foreground text-xs">
+          {emp.joiningDate
+            ? new Date(emp.joiningDate).toLocaleDateString("en-US", {
+                day: "2-digit",
+                month: "short",
+                year: "numeric",
+              })
+            : "—"}
+        </span>
+      ),
+    },
+    ...(canEdit
+      ? [
+          {
+            key: "actions",
+            header: "Actions",
+            className: "text-right",
+            render: (emp: Employee) => (
+              <div
+                className="flex items-center justify-end gap-1"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <button
+                  onClick={() => openEdit(emp)}
+                  className="p-1.5 rounded-lg hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors"
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+                </button>
+                <button
+                  onClick={() => handleDelete(emp._id)}
+                  className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            ),
+          } as Column<Employee>,
+        ]
+      : []),
+  ];
+
+  if (isLoading) {
     return (
-      <p className="text-center py-10 font-medium">Loading employees...</p>
+      <div className="p-6 text-center text-gray-500">
+        Loading master records...
+      </div>
     );
-  if (isError)
-    return (
-      <p className="text-center py-10 text-red-500 font-medium">
-        Failed to load employees. Please wait a minute & check with developer.
-      </p>
-    );
+  }
 
   return (
-    <div className="py-8 px-2 sm:px-4 md:px-8 container mx-auto text-black dark:text-black">
-      {/* Metrics Counters Grid Section */}
-      <div className="mb-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Total Card */}
-        <div className="bg-white border p-4 rounded-lg shadow-sm flex flex-col justify-center">
-          <span className="text-gray-500 font-medium text-sm tracking-wide uppercase">
-            Total Records
-          </span>
-          <span className="text-3xl font-bold text-[#4F2176]">
-            {filteredData.length}
-          </span>
-        </div>
-        {/* Active Card */}
-        <div className="bg-white border p-4 rounded-lg shadow-sm flex flex-col justify-center">
-          <span className="text-gray-500 font-medium text-sm tracking-wide uppercase">
-            Active
-          </span>
-          <span className="text-3xl font-bold text-green-600">
-            {metrics.active}
-          </span>
-        </div>
-        {/* Vacation Card */}
-        <div className="bg-white border p-4 rounded-lg shadow-sm flex flex-col justify-center">
-          <span className="text-gray-500 font-medium text-sm tracking-wide uppercase">
-            Vacation
-          </span>
-          <span className="text-3xl font-bold text-yellow-600">
-            {metrics.vacation}
-          </span>
-        </div>
-        {/* Inactive Card */}
-        <div className="bg-white border p-4 rounded-lg shadow-sm flex flex-col justify-center">
-          <span className="text-gray-500 font-medium text-sm tracking-wide uppercase">
-            Inactive
-          </span>
-          <span className="text-3xl font-bold text-red-600">
-            {metrics.inactive}
-          </span>
-        </div>
-      </div>
-
-      {/* Top Controls */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2 sm:gap-0">
-        <div className="flex items-center gap-2">
-          <label className="font-medium">Show</label>
-          <select
-            value={entriesLimit}
-            onChange={handleLimitChange}
-            className="border rounded px-2 py-1 text-sm sm:text-base bg-white border-gray-300"
-          >
-            <option value={10}>10</option>
-            <option value={25}>25</option>
-            <option value={50}>50</option>
-          </select>
-          <span>entries</span>
-        </div>
-        <div className="w-full sm:w-auto">
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={handleSearchChange}
-            placeholder="Search matching details..."
-            className="border border-gray-300 rounded px-3 py-1 text-sm sm:text-base w-full sm:w-64 bg-white"
-          />
-        </div>
-      </div>
-
-      {/* Download Action Controls */}
-      <div className="flex gap-2 mb-4">
-        <button
-          onClick={exportToExcel}
-          className="px-4 py-1.5 rounded text-white text-sm sm:text-base cursor-pointer bg-[#4F2176] hover:bg-[#3d1a5c] transition font-medium shadow-sm"
-        >
-          Excel
-        </button>
-        <button
-          onClick={exportToPDF}
-          className="px-4 py-1.5 rounded text-white text-sm sm:text-base cursor-pointer bg-[#4F2176] hover:bg-[#3d1a5c] transition font-medium shadow-sm"
-        >
-          PDF
-        </button>
-      </div>
-
-      {/* Main Table Segment */}
-      <div
-        className="overflow-x-auto border rounded bg-white shadow-sm"
-        id="employee-table"
+    <div className="space-y-4">
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="space-y-6"
       >
-        <table className="min-w-full divide-y divide-gray-200 text-sm sm:text-base">
-          <thead className="bg-[#4F2176] text-white">
-            <tr>
-              <th className="px-3 py-3 text-left font-semibold">Sr.No</th>
-              <th className="px-3 py-3 text-left font-semibold">Name</th>
-              <th className="px-3 py-3 text-left font-semibold">Job Title</th>
-              <th className="px-3 py-3 text-left font-semibold">Employee ID</th>
-              <th className="px-3 py-3 text-left font-semibold hidden md:table-cell">
-                ID Number
-              </th>
-              <th className="px-3 py-3 text-left font-semibold hidden lg:table-cell">
-                Group
-              </th>
-              <th className="px-3 py-3 text-left font-semibold hidden lg:table-cell">
-                Nationality
-              </th>
-              <th className="px-3 py-3 text-left font-semibold hidden xl:table-cell">
-                Company
-              </th>
-              <th className="px-3 py-3 text-left font-semibold hidden xl:table-cell">
-                Joining Date
-              </th>
-              <th className="px-3 py-3 text-left font-semibold">Status</th>
-              <th className="px-3 py-3 text-left font-semibold">Action</th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {paginatedData.length === 0 ? (
-              <tr>
-                <td
-                  colSpan={11}
-                  className="text-center py-10 text-gray-500 font-medium"
+        <ReusableTable<Employee>
+          data={employeesData}
+          columns={columns}
+          rowKey={(e) => e._id} // Maps to database document payload key
+          onRowClick={(e) => navigate(`/employees/${e._id}`)}
+          searchKeys={[
+            "name",
+            "jobTitle",
+            "group",
+            "companyName",
+            "employeeId",
+          ]}
+          emptyMessage="No registry matches found inside our dataset query parameters."
+          actions={
+            <>
+              <Button variant="outline" size="sm" onClick={exportExcel}>
+                <Download className="h-4 w-4 mr-1" /> Excel
+              </Button>
+              <Button variant="outline" size="sm" onClick={exportPDF}>
+                <FileText className="h-4 w-4 mr-1" /> PDF
+              </Button>
+              {canEdit && (
+                <Button
+                  size="sm"
+                  onClick={openAdd}
+                  className="bg-purple-700 hover:bg-purple-800 text-white"
                 >
-                  No records match your search criteria.
-                </td>
-              </tr>
-            ) : (
-              paginatedData.map((employee: any, idx: number) => (
-                <tr
-                  key={employee._id || employee.idNumber || idx}
-                  className={idx % 2 === 0 ? "bg-gray-50" : "bg-white"}
-                >
-                  <td className="px-3 py-3 text-gray-600">
-                    {(currentPage - 1) * entriesLimit + idx + 1}
-                  </td>
-                  <td className="px-3 py-3 font-medium text-gray-900">
-                    {employee.name}
-                  </td>
-                  <td className="px-3 py-3 text-gray-700 capitalize">
-                    {employee.jobTitle}
-                  </td>
-                  <td className="px-3 py-3 text-gray-700">
-                    {employee.employeeId || "N/A"}
-                  </td>
-                  <td className="px-3 py-3 text-gray-600 hidden md:table-cell">
-                    {employee.idNumber}
-                  </td>
-                  <td className="px-3 py-3 text-gray-600 hidden lg:table-cell">
-                    {employee.group || "—"}
-                  </td>
-                  <td className="px-3 py-3 text-gray-600 hidden lg:table-cell">
-                    {employee.nationality}
-                  </td>
-                  <td className="px-3 py-3 text-gray-600 hidden xl:table-cell">
-                    {employee.companyName || "—"}
-                  </td>
-                  <td className="px-3 py-3 text-gray-600 hidden xl:table-cell">
-                    {employee.joiningDate
-                      ? new Date(employee.joiningDate).toLocaleDateString()
-                      : "—"}
-                  </td>
-                  <td className="px-3 py-3">
-                    <span
-                      className={`px-2.5 py-1 rounded-full text-xs font-semibold tracking-wide ${
-                        employee.status?.toUpperCase() === "ACTIVE"
-                          ? "bg-green-100 text-green-800"
-                          : employee.status?.toUpperCase().includes("VACATION")
-                          ? "bg-yellow-100 text-yellow-800"
-                          : "bg-red-100 text-red-800"
-                      }`}
-                    >
-                      {employee.status}
-                    </span>
-                  </td>
-                  <td className="px-3 py-3">
-                    <Button
-                      asChild
-                      size="sm"
-                      className="bg-[#4F2176] hover:bg-[#3d1a5c] text-white"
-                    >
-                      <Link
-                        to={`/employees/${employee._id || employee.employeeId}`}
-                      >
-                        View
-                      </Link>
-                    </Button>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+                  <Plus className="h-4 w-4 mr-1" /> Add Employee
+                </Button>
+              )}
+            </>
+          }
+          page={0}
+        />
 
-      {/* Footer Interface & Interactive Controls */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mt-4 text-sm sm:text-base text-gray-600 gap-2 sm:gap-0">
-        <span>
-          Showing {startEntryIndex} to {endEntryIndex} of {filteredData.length}{" "}
-          entries
-        </span>
-        <div className="flex gap-1">
-          <button
-            disabled={currentPage === 1}
-            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-            className="px-3 py-1 border rounded text-sm disabled:opacity-40 hover:bg-gray-50 bg-white border-gray-300 font-medium"
-          >
-            Prev
-          </button>
+        {/* Modal Form Handling Framework Layout Component updates */}
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          <DialogContent className="sm:max-w-lg">
+            <DialogHeader>
+              <DialogTitle>
+                {editingEmployee
+                  ? "Modify Employee Record"
+                  : "Register New Employee"}
+              </DialogTitle>
+            </DialogHeader>
+            <div className="grid gap-4 py-2">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-sm font-medium mb-1 block">
+                    Full Name
+                  </label>
+                  <Input
+                    value={form.name}
+                    onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-1 block">
+                    Email
+                  </label>
+                  <Input
+                    value={form.email}
+                    onChange={(e) =>
+                      setForm({ ...form, email: e.target.value })
+                    }
+                    type="email"
+                  />
+                </div>
+              </div>
 
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-            (pageNumber) => (
-              <button
-                key={pageNumber}
-                onClick={() => setCurrentPage(pageNumber)}
-                className={`px-3 py-1 border rounded text-sm font-medium ${
-                  currentPage === pageNumber
-                    ? "bg-[#4F2176] text-white border-[#4F2176]"
-                    : "hover:bg-gray-50 bg-white border-gray-300"
-                }`}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-sm font-medium mb-1 block">
+                    Employee ID
+                  </label>
+                  <Input
+                    value={form.employeeId}
+                    onChange={(e) =>
+                      setForm({ ...form, employeeId: e.target.value })
+                    }
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-1 block">
+                    ID Number (Iqama/National)
+                  </label>
+                  <Input
+                    value={form.idNumber}
+                    onChange={(e) =>
+                      setForm({ ...form, idNumber: e.target.value })
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-sm font-medium mb-1 block">
+                    Phone Number
+                  </label>
+                  <Input
+                    value={form.phoneNumber}
+                    onChange={(e) =>
+                      setForm({ ...form, phoneNumber: e.target.value })
+                    }
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-1 block">
+                    Nationality
+                  </label>
+                  <Input
+                    value={form.nationality}
+                    onChange={(e) =>
+                      setForm({ ...form, nationality: e.target.value })
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-sm font-medium mb-1 block">
+                    Company Entity
+                  </label>
+                  <Input
+                    value={form.companyName}
+                    onChange={(e) =>
+                      setForm({ ...form, companyName: e.target.value })
+                    }
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-1 block">
+                    Job Title Description
+                  </label>
+                  <Input
+                    value={form.jobTitle}
+                    onChange={(e) =>
+                      setForm({ ...form, jobTitle: e.target.value })
+                    }
+                  />
+                </div>
+              </div>
+
+              <Button
+                onClick={handleSave}
+                className="w-full mt-2 bg-purple-700 text-white hover:bg-purple-800"
               >
-                {pageNumber}
-              </button>
-            ),
-          )}
-
-          <button
-            disabled={currentPage === totalPages}
-            onClick={() =>
-              setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-            }
-            className="px-3 py-1 border rounded text-sm disabled:opacity-40 hover:bg-gray-50 bg-white border-gray-300 font-medium"
-          >
-            Next
-          </button>
-        </div>
-      </div>
+                {editingEmployee ? "Apply Modifications" : "Save System Record"}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </motion.div>
     </div>
   );
 }
