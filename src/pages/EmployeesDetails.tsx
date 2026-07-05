@@ -57,8 +57,6 @@ const EmployeeDetails = () => {
   const [updateEmployee] = useUpdateEmployeeMutation();
   const [deleteEmployee] = useDeleteEmployeeMutation();
 
-  // Safely extract from backend object shape: { data: { ... } }
-
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState({
     name: "",
@@ -120,7 +118,7 @@ const EmployeeDetails = () => {
 
   if (!employee) {
     return (
-      <div className="space-y-4">
+      <div className="space-y-4 container mx-auto p-6">
         <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
           <ArrowLeft className="h-4 w-4 mr-1" /> Back
         </Button>
@@ -132,17 +130,6 @@ const EmployeeDetails = () => {
   }
 
   // Elegant dynamic details component helper function
-  const detail = (Icon: any, label: string, value: React.ReactNode) => (
-    <div className="flex items-start gap-3 p-4 rounded-lg bg-muted/20 border border-border/50">
-      <div className="h-9 w-9 rounded-lg bg-primary/15 flex items-center justify-center shrink-0">
-        <Icon className="h-4 w-4 text-primary" />
-      </div>
-      <div className="min-w-0">
-        <p className="text-xs text-muted-foreground">{label}</p>
-        <p className="text-sm font-medium mt-0.5 break-words">{value || "—"}</p>
-      </div>
-    </div>
-  );
 
   return (
     <motion.div
@@ -153,7 +140,7 @@ const EmployeeDetails = () => {
       {/* Top Action Nav Menu */}
       <div className="flex items-center justify-between gap-3 ">
         <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
-          <ArrowLeft className="h-4 w-4 mr-1" /> Back
+          <ArrowLeft className="h-4 w-4 mr-1 container" /> Back
         </Button>
         {canEdit && (
           <div className="flex items-center gap-2">

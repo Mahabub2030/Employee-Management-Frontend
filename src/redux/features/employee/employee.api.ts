@@ -23,6 +23,7 @@ export const employeeApi = baseApi.injectEndpoints({
       query: (id) => ({
         url: `/employees/${id}`,
         method: "GET",
+        params: { id },
       }),
       providesTags: ["EMPLOYEES"],
       transformResponse: (response) => response.data,

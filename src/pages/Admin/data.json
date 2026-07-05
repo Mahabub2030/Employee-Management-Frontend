@@ -1,0 +1,22 @@
+{
+  "menuItems": [
+    { "id": "nav-dash", "label": "Dashboard" },
+    { "id": "nav-emp-active", "label": "Employee Management" },
+    { "id": "nav-emp-archive", "label": "Employee Management" },
+    { "id": "nav-analytics", "label": "Analytics" }
+  ],
+  "unemploymentData": [
+    { "rate": 4.2 },
+    { "rate": 4.5 },
+    { "rate": 5.1 },
+    { "rate": 3.8 },
+    { "rate": 6.2 },
+    { "rate": 4.5 },
+    { "rate": 5.3 },
+    { "rate": 4.1 },
+    { "rate": null },
+    { "rate": 3.9 },
+    { "rate": 4.8 },
+    { "rate": 5.0 }
+  ]
+}

@@ -52,7 +52,7 @@ export function LoginForm({
 
       if (res.success) {
         toast.success("Welcome to EMS!", { id: toastId });
-        navigate("/");
+        navigate("/admin/analytics");
       }
     } catch (error: any) {
       toast.error(error?.data?.message || "Login failed", { id: toastId });
