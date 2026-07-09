@@ -10,24 +10,23 @@ export const employeeApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["EMPLOYEES"],
     }),
-    getEmployees: builder.query({
+    getAllEmployees: builder.query({
       query: (params) => ({
         url: "/employees/all-Employee",
         method: "GET",
-        params,
+        params: params,
       }),
       providesTags: ["EMPLOYEES"],
       transformResponse: (response) => response.data,
     }),
-    getSingalEmployees: builder.query({
-      query: (id) => ({
-        url: `/employees/${id}`,
-        method: "GET",
-        params: { id },
-      }),
-      providesTags: ["EMPLOYEES"],
-      transformResponse: (response) => response.data,
-    }),
+    // getSingalEmployees: builder.query({
+    //   query: ({ id }) => ({
+    //     url: `/employees/${id}`,
+    //     method: "GET",
+    //   }),
+    //   providesTags: ["EMPLOYEES"],
+    //   transformResponse: (response) => response.data,
+    // }),
     updateEmployee: builder.mutation({
       query: ({ id, ...data }) => ({
         url: `/employees/${id}`,
@@ -48,8 +47,7 @@ export const employeeApi = baseApi.injectEndpoints({
 
 export const {
   useAddEmployeesMutation,
-  useGetEmployeesQuery,
-  useGetSingalEmployeesQuery,
+  useGetAllEmployeesQuery,
   useUpdateEmployeeMutation,
   useDeleteEmployeeMutation,
 } = employeeApi;

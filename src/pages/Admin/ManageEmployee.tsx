@@ -1,5 +1,5 @@
-import { useGetEmployeesQuery } from "@/redux/features/employee/employee.api";
 import { ReusableTable, Column } from "@/components/ui/reusable-table";
+import { useGetAllEmployeesQuery } from "@/redux/features/employee/employee.api";
 
 export enum EMPLOYEE_STATUS {
   ACTIVE = "ACTIVE",
@@ -39,7 +39,7 @@ export interface Employee {
 
 export default function ManageEmployee() {
   // Fetching live data via your RTK-Query slice
-  const { data: employees } = useGetEmployeesQuery(undefined);
+  const { data: employees } = useGetAllEmployeesQuery(undefined);
 
   // Administrative Handler Functions
   const handleEdit = (employee: Employee) => {

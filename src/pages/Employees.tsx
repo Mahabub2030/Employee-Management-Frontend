@@ -2,10 +2,10 @@ import { useAuth } from "@/constants/AuthContext";
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import {
-  useGetEmployeesQuery,
   useUpdateEmployeeMutation,
   useDeleteEmployeeMutation,
   useAddEmployeesMutation,
+  useGetAllEmployeesQuery,
 } from "@/redux/features/employee/employee.api";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
@@ -98,7 +98,7 @@ export default function Employees() {
 
   // RTK Query Hooks
   const { data: employeesData = [], isLoading } =
-    useGetEmployeesQuery(undefined);
+    useGetAllEmployeesQuery(undefined);
   const [addEmployee] = useAddEmployeesMutation();
   const [updateEmployee] = useUpdateEmployeeMutation();
   const [deleteEmployee] = useDeleteEmployeeMutation();

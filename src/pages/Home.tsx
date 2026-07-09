@@ -1,18 +1,8 @@
-// export default function Home() {
-//   return (
-//     <div>
-//       {/* hero section */}
-
-//       {/* testimonials section */}
-
-//       {/* team section */}
-//     </div>
-//   );
-// }
 import React, { useMemo, useRef, useEffect, useState } from "react";
+
 import * as d3 from "d3";
 
-// --- 1. Mock JSON Data Sets ---
+// --- 1. Combined Mock Datasets ---
 const mockDataset = {
   metrics: [
     { id: "emp-01", name: "Alice Smith", rate: 4.2, department: "Engineering" },
@@ -31,7 +21,7 @@ const mockDataset = {
       id: "s1",
       icon: "📊",
       title: "Predictive Analytics",
-      desc: "Forecast organizational performance indicators and workforce utilization trends.",
+      desc: "Forecast organizational performance indicators and workforce trends.",
     },
     {
       id: "s2",
@@ -44,6 +34,32 @@ const mockDataset = {
       icon: "⚙️",
       title: "Operations Strategy",
       desc: "Streamline workflows with quantitative data-driven metric breakdowns.",
+    },
+  ],
+  testimonials: [
+    {
+      id: "rev-01",
+      quote:
+        "Implementing the Vanguard platform fundamentally restructured our timelines. The raw metrics insights saved us over 40 hours a week.",
+      author: "Elena Rostova",
+      role: "VP of Engineering at CloudScale",
+      rating: "⭐⭐⭐⭐⭐",
+    },
+    {
+      id: "rev-02",
+      quote:
+        "The live data distribution cluster charts are exactly what our team leads needed. The visual patterns expose bottlenecks instantly.",
+      author: "Marcus Chen",
+      role: "Operations Director at InnovateCorp",
+      rating: "⭐⭐⭐⭐⭐",
+    },
+    {
+      id: "rev-03",
+      quote:
+        "Stunning analytics visuals backed by bulletproof performance data integrity. This interface has become our definitive central command unit.",
+      author: "Sarah Jenkins",
+      role: "Chief Technology Officer at AlphaData",
+      rating: "⭐⭐⭐⭐⭐",
     },
   ],
   team: [
@@ -75,8 +91,14 @@ export interface EmployeeMetric {
   department?: string;
 }
 
-// --- 2. Animated D3 Chart Component ---
-function AnimatedChart({ data }: { data: EmployeeMetric[] }) {
+// --- 2. D3 Distribution Chart Component (Responsive & Theme Aware) ---
+function AnimatedChart({
+  data,
+  isDarkMode,
+}: {
+  data: EmployeeMetric[];
+  isDarkMode: boolean;
+}) {
   const width = 800;
   const height = 350;
   const marginTop = 20;
@@ -118,27 +140,38 @@ function AnimatedChart({ data }: { data: EmployeeMetric[] }) {
 
   useEffect(() => {
     if (!xAxisRef.current || !yAxisRef.current || !xScale || !yScale) return;
+
+    // Axis line colors adjust smoothly to the active theme context
+    const axisColor = isDarkMode ? "#9ca3af" : "#4b5563";
+
+    const xAxis = d3.axisBottom(xScale).ticks(10);
+    const yAxis = d3.axisLeft(yScale).ticks(5);
+
     d3.select(xAxisRef.current)
       .transition()
-      .duration(800)
-      .call(d3.axisBottom(xScale).ticks(10));
+      .duration(400)
+      .call(xAxis)
+      .style("color", axisColor);
     d3.select(yAxisRef.current)
       .transition()
-      .duration(800)
-      .call(d3.axisLeft(yScale).ticks(5))
+      .duration(400)
+      .call(yAxis)
+      .style("color", axisColor)
       .select(".domain")
       .remove();
-  }, [xScale, yScale]);
+  }, [xScale, yScale, isDarkMode]);
 
   if (!xScale || !yScale || bins.length === 0)
-    return <div>Generating chart...</div>;
+    return <div>Generating distribution analytics...</div>;
 
   return (
     <svg
       viewBox={`0 0 ${width} ${height}`}
       style={{ width: "100%", height: "auto" }}
     >
-      <g fill="#4f46e5">
+      <g fill={isDarkMode ? "#6366f1" : "#4f46e5"}>
+        {" "}
+        {/* Dynamic bar color */}
         {bins.map((d, idx) => {
           if (d.x0 === undefined || d.x1 === undefined) return null;
           const barHeight = Math.max(0, yScale(0) - yScale(d.length));
@@ -165,20 +198,39 @@ function AnimatedChart({ data }: { data: EmployeeMetric[] }) {
   );
 }
 
-// --- 3. Main Landing Page ---
-export default function HomePage() {
-  const [hoveredCard, setHoveredCard] = useState<string | null>(null);
+// --- 3. Main Exported Landing Page Component ---
+export default function Home() {
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
+  const [hoveredService, setHoveredService] = useState<string | null>(null);
+  const [hoveredReview, setHoveredReview] = useState<string | null>(null);
+
+  // Theme Styling Configuration
+  const theme = {
+    bg: isDarkMode ? "#0f172a" : "#f9fafb",
+    cardBg: isDarkMode ? "#1e293b" : "#ffffff",
+    text: isDarkMode ? "#f8fafc" : "#111827",
+    subText: isDarkMode ? "#94a3b8" : "#4b5563",
+    border: isDarkMode ? "#334155" : "#e5e7eb",
+    shadow: isDarkMode
+      ? "0 4px 20px rgba(0,0,0,0.4)"
+      : "0 4px 20px rgba(0,0,0,0.03)",
+    cardShadowHover: isDarkMode
+      ? "0 12px 24px -10px rgba(0,0,0,0.6)"
+      : "0 12px 24px -10px rgba(0,0,0,0.1)",
+    quoteMark: isDarkMode ? "#334155" : "#e5e7eb",
+  };
 
   return (
     <div
       style={{
-        backgroundColor: "#f9fafb",
+        backgroundColor: theme.bg,
         fontFamily: "system-ui, sans-serif",
-        color: "#111827",
+        color: theme.text,
         minHeight: "100vh",
+        transition: "background-color 0.3s ease, color 0.3s ease",
       }}
     >
-      {/* Embedded CSS Animations */}
+      {/* CSS Keyframes Embedded */}
       <style>{`
         @keyframes fadeInDown {
           from { opacity: 0; transform: translateY(-30px); }
@@ -196,12 +248,43 @@ export default function HomePage() {
         .animate-fade-up { animation: fadeInUp 1s cubic-bezier(0.16, 1, 0.3, 1) both; }
       `}</style>
 
-      {/* Hero Section */}
+      {/* FIXED FLOATING THEME TOGGLE BUTTON */}
+      <button
+        onClick={() => setIsDarkMode(!isDarkMode)}
+        style={{
+          position: "fixed",
+          top: "24px",
+          right: "24px",
+          zIndex: 1000,
+          backgroundColor: isDarkMode ? "#ffffff" : "#0f172a",
+          color: isDarkMode ? "#0f172a" : "#ffffff",
+          border: "none",
+          padding: "12px 18px",
+          borderRadius: "30px",
+          cursor: "pointer",
+          fontWeight: "600",
+          fontSize: "14px",
+          boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+          display: "flex",
+          alignItems: "center",
+          gap: "8px",
+          transition: "transform 0.2s",
+        }}
+        onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.05)")}
+        onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
+      >
+        {isDarkMode ? "☀️ Light View" : "🌙 Dark View"}
+      </button>
+
+      {/* HERO SECTION */}
       <section
         style={{
-          background: "linear-gradient(135deg, #4f46e5 0%, #312e81 100%)",
+          background: isDarkMode
+            ? "linear-gradient(135deg, #312e81 0%, #0f172a 100%)"
+            : "linear-gradient(135deg, #4f46e5 0%, #312e81 100%)",
           color: "#fff",
-          padding: "100px 20px text-align: center",
+          padding: "120px 20px",
+          transition: "background 0.3s ease",
         }}
         className="animate-hero"
       >
@@ -221,7 +304,7 @@ export default function HomePage() {
           <p
             style={{
               fontSize: "19px",
-              color: "#e0e7ff",
+              color: isDarkMode ? "#cbd5e1" : "#e0e7ff",
               lineHeight: "1.6",
               marginBottom: "30px",
             }}
@@ -231,8 +314,8 @@ export default function HomePage() {
           </p>
           <button
             style={{
-              backgroundColor: "#fff",
-              color: "#4f46e5",
+              backgroundColor: isDarkMode ? "#6366f1" : "#ffffff",
+              color: isDarkMode ? "#ffffff" : "#4f46e5",
               border: "none",
               padding: "14px 28px",
               borderRadius: "6px",
@@ -247,21 +330,17 @@ export default function HomePage() {
             }
             onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
           >
-            Explore Infrastructure
+            Get Started Safely
           </button>
         </div>
       </section>
 
-      {/* Content Layout Wrapper */}
+      {/* MAIN CONTAINER LAYOUT */}
       <div
         style={{ maxWidth: "1140px", margin: "0 auto", padding: "80px 20px" }}
       >
-        {/* Services / Feature Cards */}
-        <section
-          style={{ marginBottom: "100px" }}
-          className="animate-fade-up"
-          style={{ animationDelay: "0.2s" }}
-        >
+        {/* SERVICES SECTION */}
+        <section style={{ marginBottom: "100px" }} className="animate-fade-up">
           <h2
             style={{
               textAlign: "center",
@@ -282,22 +361,23 @@ export default function HomePage() {
             {mockDataset.services.map((service) => (
               <div
                 key={service.id}
-                onMouseEnter={() => setHoveredCard(service.id)}
-                onMouseLeave={() => setHoveredCard(null)}
+                onMouseEnter={() => setHoveredService(service.id)}
+                onMouseLeave={() => setHoveredService(null)}
                 style={{
-                  backgroundColor: "#fff",
+                  backgroundColor: theme.cardBg,
                   padding: "30px",
                   borderRadius: "12px",
-                  border: "1px solid #e5e7eb",
+                  border: `1px solid ${theme.border}`,
                   boxShadow:
-                    hoveredCard === service.id
-                      ? "0 12px 24px -10px rgba(0,0,0,0.1)"
-                      : "0 4px 6px -1px rgba(0,0,0,0.02)",
+                    hoveredService === service.id
+                      ? theme.cardShadowHover
+                      : theme.shadow,
                   transform:
-                    hoveredCard === service.id
+                    hoveredService === service.id
                       ? "translateY(-8px)"
                       : "translateY(0)",
-                  transition: "all 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
+                  transition:
+                    "all 0.3s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.3s ease, border-color 0.3s ease",
                 }}
               >
                 <div style={{ fontSize: "40px", marginBottom: "16px" }}>
@@ -312,7 +392,9 @@ export default function HomePage() {
                 >
                   {service.title}
                 </h3>
-                <p style={{ color: "#4b5563", lineHeight: "1.5", margin: 0 }}>
+                <p
+                  style={{ color: theme.subText, lineHeight: "1.5", margin: 0 }}
+                >
                   {service.desc}
                 </p>
               </div>
@@ -320,19 +402,16 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Live Metrics Visualization Card Component */}
-        <section
-          style={{ marginBottom: "100px" }}
-          className="animate-fade-up"
-          style={{ animationDelay: "0.4s" }}
-        >
+        {/* LIVE DATA VISUALIZATION SECTION */}
+        <section style={{ marginBottom: "100px" }} className="animate-fade-up">
           <div
             style={{
-              backgroundColor: "#fff",
-              border: "1px solid #e5e7eb",
+              backgroundColor: theme.cardBg,
+              border: `1px solid ${theme.border}`,
               borderRadius: "16px",
               padding: "40px",
-              boxShadow: "0 4px 20px rgba(0,0,0,0.03)",
+              boxShadow: theme.shadow,
+              transition: "background-color 0.3s ease, border-color 0.3s ease",
             }}
           >
             <h2
@@ -344,18 +423,164 @@ export default function HomePage() {
             >
               Live Efficiency Distribution
             </h2>
-            <p style={{ color: "#6b7280", marginBottom: "30px" }}>
+            <p style={{ color: theme.subText, marginBottom: "30px" }}>
               Real-time cluster calculations mapping structural data
               frequencies.
             </p>
             <div style={{ width: "100%", overflowX: "auto" }}>
-              <AnimatedChart data={mockDataset.metrics} />
+              <AnimatedChart
+                data={mockDataset.metrics}
+                isDarkMode={isDarkMode}
+              />
             </div>
           </div>
         </section>
 
-        {/* Corporate Team Grid Section */}
-        <section className="animate-fade-up" style={{ animationDelay: "0.6s" }}>
+        {/* TESTIMONIALS SECTION */}
+        <section className="animate-fade-up" style={{ marginBottom: "100px" }}>
+          <div style={{ textAlign: "center", marginBottom: "50px" }}>
+            <h2
+              style={{
+                fontSize: "32px",
+                fontWeight: "700",
+                marginBottom: "16px",
+              }}
+            >
+              Trusted by Industry Leaders
+            </h2>
+            <p
+              style={{
+                color: theme.subText,
+                maxWidth: "600px",
+                margin: "0 auto",
+                fontSize: "16px",
+              }}
+            >
+              See how modern development teams utilize our frequency platforms
+              to maximize resource tracking.
+            </p>
+          </div>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+              gap: "30px",
+            }}
+          >
+            {mockDataset.testimonials.map((review) => (
+              <div
+                key={review.id}
+                onMouseEnter={() => setHoveredReview(review.id)}
+                onMouseLeave={() => setHoveredReview(null)}
+                style={{
+                  backgroundColor: theme.cardBg,
+                  padding: "32px",
+                  borderRadius: "16px",
+                  border: `1px solid ${theme.border}`,
+                  boxShadow:
+                    hoveredReview === review.id
+                      ? theme.cardShadowHover
+                      : theme.shadow,
+                  transform:
+                    hoveredReview === review.id
+                      ? "translateY(-6px)"
+                      : "translateY(0)",
+                  transition:
+                    "all 0.3s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.3s ease, border-color 0.3s ease",
+                  position: "relative",
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "space-between",
+                }}
+              >
+                <span
+                  style={{
+                    position: "absolute",
+                    top: "16px",
+                    right: "24px",
+                    fontSize: "64px",
+                    color: theme.quoteMark,
+                    fontFamily: "Georgia, serif",
+                    lineHeight: 1,
+                    pointerEvents: "none",
+                    transition: "color 0.3s ease",
+                  }}
+                >
+                  “
+                </span>
+                <div>
+                  <div style={{ marginBottom: "12px", fontSize: "14px" }}>
+                    {review.rating}
+                  </div>
+                  <p
+                    style={{
+                      color: theme.text,
+                      fontSize: "15px",
+                      lineHeight: "1.6",
+                      fontStyle: "italic",
+                      margin: "0 0 24px 0",
+                    }}
+                  >
+                    "{review.quote}"
+                  </p>
+                </div>
+                <div
+                  style={{
+                    borderTop: `1px solid ${theme.border}`,
+                    paddingTop: "16px",
+                    display: "flex",
+                    alignItems: "center",
+                    transition: "border-color 0.3s ease",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: "40px",
+                      height: "40px",
+                      backgroundColor: isDarkMode ? "#334155" : "#e0e7ff",
+                      borderRadius: "50%",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: "18px",
+                      marginRight: "12px",
+                      fontWeight: "bold",
+                      color: isDarkMode ? "#6366f1" : "#4f46e5",
+                    }}
+                  >
+                    {review.author.charAt(0)}
+                  </div>
+                  <div>
+                    <h4
+                      style={{
+                        fontSize: "15px",
+                        fontWeight: "600",
+                        margin: 0,
+                        color: theme.text,
+                      }}
+                    >
+                      {review.author}
+                    </h4>
+                    <p
+                      style={{
+                        fontSize: "13px",
+                        color: theme.subText,
+                        margin: 0,
+                        marginTop: "2px",
+                      }}
+                    >
+                      {review.role}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* TEAM SECTION */}
+        <section className="animate-fade-up">
           <h2
             style={{
               textAlign: "center",
@@ -377,24 +602,26 @@ export default function HomePage() {
               <div
                 key={member.id}
                 style={{
-                  backgroundColor: "#fff",
-                  border: "1px solid #e5e7eb",
+                  backgroundColor: theme.cardBg,
+                  border: `1px solid ${theme.border}`,
                   borderRadius: "12px",
                   padding: "30px",
                   textAlign: "center",
-                  transition: "box-shadow 0.3s",
+                  boxShadow: theme.shadow,
+                  transition: "all 0.3s ease",
                 }}
                 onMouseEnter={(e) =>
-                  (e.currentTarget.style.boxShadow =
-                    "0 10px 20px rgba(0,0,0,0.05)")
+                  (e.currentTarget.style.boxShadow = theme.cardShadowHover)
                 }
-                onMouseLeave={(e) => (e.currentTarget.style.boxShadow = "none")}
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.boxShadow = theme.shadow)
+                }
               >
                 <div
                   style={{
                     width: "80px",
                     height: "80px",
-                    backgroundColor: "#e0e7ff",
+                    backgroundColor: isDarkMode ? "#334155" : "#e0e7ff",
                     borderRadius: "50%",
                     display: "flex",
                     alignItems: "center",
@@ -416,7 +643,7 @@ export default function HomePage() {
                 </h4>
                 <p
                   style={{
-                    color: "#4f46e5",
+                    color: isDarkMode ? "#818cf8" : "#4f46e5",
                     fontSize: "14px",
                     fontWeight: "500",
                     margin: 0,
