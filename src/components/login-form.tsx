@@ -47,12 +47,13 @@ export function LoginForm({
   const handleSubmit = async (data: z.infer<typeof loginSchema>) => {
     const toastId: string | number | undefined =
       toast.loading(" logging in...");
+    navigate("/");
     try {
       const res = await login(data).unwrap();
 
       if (res.success) {
         toast.success("Welcome to EMS!", { id: toastId });
-        navigate("/admin/analytics");
+        navigate("/");
       }
     } catch (error: any) {
       toast.error(error?.data?.message || "Login failed", { id: toastId });

@@ -249,7 +249,7 @@ export default function Home() {
       `}</style>
 
       {/* FIXED FLOATING THEME TOGGLE BUTTON */}
-      <button
+      {/* <button
         onClick={() => setIsDarkMode(!isDarkMode)}
         style={{
           position: "fixed",
@@ -274,7 +274,7 @@ export default function Home() {
         onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
       >
         {isDarkMode ? "☀️ Light View" : "🌙 Dark View"}
-      </button>
+      </button> */}
 
       {/* HERO SECTION */}
       <section
