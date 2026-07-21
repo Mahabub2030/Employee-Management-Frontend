@@ -16,12 +16,17 @@ const axiosBaseQuery =
   > =>
   async ({ url, method, data, params, headers }) => {
     try {
+      const token = localStorage.getItem("auth_token");
       const result = await axiosInstance({
         url: url,
         method,
         data,
         params,
-        headers,
+        headers: {
+          ...headers,
+          // Attach Bearer token so backend accepts request
+          Authorization: token ? `Bearer ${token}` : "",
+        },
       });
       return { data: result.data };
     } catch (axiosError) {

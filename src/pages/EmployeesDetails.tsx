@@ -40,20 +40,15 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useAuth } from "@/constants/AuthContext";
 import { toast } from "sonner";
 
-// ⚠️ Confirm these hook names against your actual employee.api.ts.
-// Kept "useGetSingalEmployeesQuery" as-is to match your file — you may
-// want to rename it to useGetSingleEmployeeQuery later (typo: Singal -> Single),
-// just update this import + the call below if you rename it.
 import {
   useUpdateEmployeeMutation,
   useDeleteEmployeeMutation,
   useGetSingalEmployeesQuery,
 } from "@/redux/features/employee/employee.api";
+import { useAuth } from "@/constants/AuthContext";
 
-// Matches the actual MongoDB document shape returned by your API
 type Employee = {
   _id: string;
   name: string;
@@ -65,11 +60,11 @@ type Employee = {
   idNumber?: string;
   employeeId?: string;
   dacoId?: string;
-  group: string; // e.g. "Administrative / Management"
+  group: string;
   joiningDate?: string;
   nationality?: string;
   companyName?: string;
-  status: string; // e.g. "ACTIVE"
+  status: string;
   remark?: string;
   updatedAt: string;
 };
@@ -85,18 +80,17 @@ const statusBadge: Record<string, string> = {
 const EmployeeDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
-  console.log("auth user:", user); // TEMP: check the shape/value of user + role in your console
 
-  // Only these roles can see Update/Delete. Add more role strings here if needed
-  // (comparison is lowercased, so "Admin", "ADMIN", "admin" all match).
-  const ALLOWED_ROLES = ["admin", "superadmin"];
-  const role = (user?.role || "").toString().toLowerCase();
-  const canEdit = ALLOWED_ROLES.includes(role);
+  // Pull auth data safely
+  const { user, loading: isAuthLoading } = useAuth();
+  const role = user?.role;
+  console.log(user);
+  // ✅ FIXED: Safely resolve permissions without using undefined 'cand'
+  const canEdit = user?.role === "admin" || user?.role === "SUPER_ADMIN";
 
   const {
     data: employee,
-    isLoading,
+    isLoading: isDataLoading,
     isError,
     refetch,
   } = useGetSingalEmployeesQuery({ id: id! }, { skip: !id });
@@ -106,8 +100,10 @@ const EmployeeDetails = () => {
   const [deleteEmployee, { isLoading: isDeleting }] =
     useDeleteEmployeeMutation();
 
+  // Control modals independently
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -177,14 +173,24 @@ const EmployeeDetails = () => {
       navigate("/employees");
     } catch {
       toast.error("Failed to delete");
-    } finally {
-      setDeleteDialogOpen(false);
     }
   };
 
-  if (isLoading) {
+  // 1. Session authorization gate
+  if (isAuthLoading) {
     return (
-      <div className="text-muted-foreground text-sm">Loading employee...</div>
+      <div className="text-muted-foreground text-sm p-6">
+        Verifying secure user session...
+      </div>
+    );
+  }
+
+  // 2. Database data fetch gate
+  if (isDataLoading) {
+    return (
+      <div className="text-muted-foreground text-sm p-6">
+        Loading employee data file...
+      </div>
     );
   }
 
@@ -203,7 +209,7 @@ const EmployeeDetails = () => {
 
   const initials = employee.name
     .split(" ")
-    .map((n: any[]) => n[0])
+    .map((n: string) => n[0])
     .join("")
     .toUpperCase()
     .slice(0, 2);
@@ -303,6 +309,7 @@ const EmployeeDetails = () => {
         </div>
       )}
 
+      {/* Update Dialog Modal */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
@@ -442,6 +449,7 @@ const EmployeeDetails = () => {
         </DialogContent>
       </Dialog>
 
+      {/* Delete Confirmation Alert Box */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>

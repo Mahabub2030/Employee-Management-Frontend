@@ -32,8 +32,14 @@ export const useAuth = () => useContext(AuthContext);
 const API_BASE = "http://localhost:5000/api"; // 👈 change to your backend URL
 
 async function fetchAppUser(token: string): Promise<AppUser | null> {
-  const res = await fetch(`${API_BASE}/auth/me`, {
-    headers: { Authorization: `Bearer ${token}` },
+  const res = await fetch(`${API_BASE}/user/me`, {
+    method: "GET",
+    cache: "no-store",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Cache-Control": "no-cache, no-store, must-revalidate",
+      Pragma: "no-cache",
+    },
   });
   if (!res.ok) return null;
   const data = await res.json();

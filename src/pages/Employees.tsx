@@ -80,7 +80,7 @@ export default function Employees() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const canEdit = user?.role === "admin" || user?.role === "superadmin";
-
+  console.log("this user from Employee component", user);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
 
