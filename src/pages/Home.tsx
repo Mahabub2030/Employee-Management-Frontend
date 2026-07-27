@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import * as d3 from "d3";
 
@@ -277,63 +277,6 @@ export default function Home() {
       </button> */}
 
       {/* HERO SECTION */}
-      <section
-        style={{
-          background: isDarkMode
-            ? "linear-gradient(135deg, #312e81 0%, #0f172a 100%)"
-            : "linear-gradient(135deg, #4f46e5 0%, #312e81 100%)",
-          color: "#fff",
-          padding: "120px 20px",
-          transition: "background 0.3s ease",
-        }}
-        className="animate-hero"
-      >
-        <div
-          style={{ maxWidth: "800px", margin: "0 auto", textAlign: "center" }}
-        >
-          <h1
-            style={{
-              fontSize: "48px",
-              fontWeight: "800",
-              marginBottom: "20px",
-              letterSpacing: "-1px",
-            }}
-          >
-            The Next Generation of Operations Management
-          </h1>
-          <p
-            style={{
-              fontSize: "19px",
-              color: isDarkMode ? "#cbd5e1" : "#e0e7ff",
-              lineHeight: "1.6",
-              marginBottom: "30px",
-            }}
-          >
-            Empower your team leads with deep data metrics distributions,
-            performance modeling, and transparent ecosystem visibility.
-          </p>
-          <button
-            style={{
-              backgroundColor: isDarkMode ? "#6366f1" : "#ffffff",
-              color: isDarkMode ? "#ffffff" : "#4f46e5",
-              border: "none",
-              padding: "14px 28px",
-              borderRadius: "6px",
-              fontSize: "16px",
-              fontWeight: "600",
-              cursor: "pointer",
-              boxShadow: "0 4px 14px rgba(0,0,0,0.15)",
-              transition: "transform 0.2s",
-            }}
-            onMouseEnter={(e) =>
-              (e.currentTarget.style.transform = "scale(1.05)")
-            }
-            onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
-          >
-            Get Started Safely
-          </button>
-        </div>
-      </section>
 
       {/* MAIN CONTAINER LAYOUT */}
       <div

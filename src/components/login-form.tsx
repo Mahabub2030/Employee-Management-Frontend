@@ -47,7 +47,6 @@ export function LoginForm({
   const handleSubmit = async (data: z.infer<typeof loginSchema>) => {
     const toastId: string | number | undefined =
       toast.loading(" logging in...");
-    navigate("/");
     try {
       const res = await login(data).unwrap();
 

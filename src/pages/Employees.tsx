@@ -1,18 +1,3 @@
-import { useAuth } from "@/constants/AuthContext";
-import { useState } from "react";
-import { useNavigate } from "react-router";
-import {
-  useUpdateEmployeeMutation,
-  useDeleteEmployeeMutation,
-  useAddEmployeesMutation,
-  useGetAllEmployeesQuery,
-} from "@/redux/features/employee/employee.api";
-import { toast } from "sonner";
-import * as XLSX from "xlsx";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
-import { Download, FileText, Pencil, Plus, Trash2 } from "lucide-react";
-import { Column, ReusableTable } from "@/components/ui/reusable-table";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -20,15 +5,23 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { motion } from "framer-motion";
 import { Input } from "@/components/ui/input";
+import { Column, ReusableTable } from "@/components/ui/reusable-table";
+import { useAuth } from "@/constants/AuthContext";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  useAddEmployeesMutation,
+  useDeleteEmployeeMutation,
+  useGetAllEmployeesQuery,
+  useUpdateEmployeeMutation,
+} from "@/redux/features/employee/employee.api";
+import { motion } from "framer-motion";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import { Download, FileText, Pencil, Plus, Trash2 } from "lucide-react";
+import { useState } from "react";
+import { useNavigate } from "react-router";
+import { toast } from "sonner";
+import * as XLSX from "xlsx";
 
 // --- Updated Interface to Match JSON Data Exactly ---
 export interface Employee {
@@ -88,12 +81,12 @@ export default function Employees() {
     name: "",
     email: "",
     phoneNumber: "",
-    group: "Administrative / Management",
-    jobTitle: "Administrator",
-    companyName: "Safari Group",
+    group: "",
+    jobTitle: "",
+    companyName: "",
     employeeId: "",
     idNumber: "",
-    nationality: "Saudi",
+    nationality: "",
   });
 
   // RTK Query Hooks
@@ -109,12 +102,12 @@ export default function Employees() {
       name: "",
       email: "",
       phoneNumber: "",
-      group: "Administrative / Management",
-      jobTitle: "Administrator",
-      companyName: "Safari Group",
+      group: "",
+      jobTitle: "",
+      companyName: "",
       employeeId: "",
       idNumber: "",
-      nationality: "Saudi",
+      nationality: "",
     });
     setDialogOpen(true);
   };

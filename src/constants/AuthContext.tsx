@@ -1,8 +1,8 @@
 import {
   createContext,
   useContext,
-  useState,
   useEffect,
+  useState,
   type ReactNode,
 } from "react";
 
@@ -29,7 +29,7 @@ const AuthContext = createContext<AuthContextType>({} as AuthContextType);
 
 export const useAuth = () => useContext(AuthContext);
 
-const API_BASE = "http://localhost:5000/api"; // 👈 change to your backend URL
+const API_BASE = "http://localhost:5000/api/v1"; // 👈 change to your backend URL
 
 async function fetchAppUser(token: string): Promise<AppUser | null> {
   const res = await fetch(`${API_BASE}/user/me`, {
